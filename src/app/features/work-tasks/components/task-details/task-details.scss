@@ -1,0 +1,56 @@
+.task-details {
+	width: 100%;
+	max-width: 960px;
+	margin-inline: auto;
+}
+
+.task-details__form {
+	display: grid;
+	gap: 1.25rem;
+}
+
+.task-details__summary {
+	display: grid;
+	gap: 0.25rem;
+	margin-bottom: 1rem;
+}
+
+.task-details__status-form {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 0.75rem;
+}
+
+.task-details__status-stepper {
+	margin-bottom: 0.5rem;
+}
+
+.task-details__create-form {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 0.75rem;
+}
+
+.task-details__create-form app-text-area {
+	grid-column: 1 / -1;
+}
+
+.task-details__form mat-form-field {
+	width: 100%;
+}
+
+.task-details__full-width {
+	grid-column: 1 / -1;
+}
+
+.task-details__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.task-details__error {
+	color: var(--mat-sys-error);
+	margin-top: 0.75rem;
+}

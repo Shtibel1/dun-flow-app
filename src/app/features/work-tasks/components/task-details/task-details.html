@@ -1,0 +1,108 @@
+<mat-card>
+  <mat-card-content>
+    <div class="task-details">
+      <h2>{{ isEditMode() ? 'Update task' : 'Create task' }}</h2>
+
+      @if (isLoading()) {
+        <mat-progress-spinner></mat-progress-spinner>
+      }
+
+      @if (!isLoading()) {
+        <form
+          [formGroup]="form"
+          class="task-details__form"
+        >
+          <div class="task-details__create-form">
+            <app-custom-input label="Title" [control]="form.controls.title"></app-custom-input>
+
+            <app-select
+              label="Type"
+              [options]="taskTypeOptions()"
+              [control]="form.controls.type"
+            ></app-select>
+
+            @if (!isEditMode()) {
+              <app-user-select
+                label="Assigned user"
+                [control]="form.controls.nextAssignedUserId"
+              ></app-user-select>
+            }
+
+          </div>
+
+          @if (isEditMode() && task()) {
+            <app-task-status-stepper
+              class="task-details__status-stepper"
+              [steps]="steps()"
+              [selectedStatus]="steps()[currentStepIndex() + 1]?.value ?? task()?.currentStatus ?? null"
+              [canBeClosed]="task()!.canBeClosed"
+            ></app-task-status-stepper>
+
+            <div class="task-details__status-form">
+              <app-user-select
+                label="Next assigned user"
+                [control]="form.controls.nextAssignedUserId"
+              ></app-user-select>
+            </div>
+
+            <app-dynamic-task-form
+              [fields]="dynamicFields()"
+              [formGroup]="form.controls.customFields"
+              [initialValuesJson]="task()?.customFieldsJson ?? '{}'"
+            ></app-dynamic-task-form>
+          }
+
+          <div class="task-details__actions">
+            <button mat-button type="button" (click)="goToTasksList()" [disabled]="isLoading()">
+              Back to tasks
+            </button>
+
+            @if (!isEditMode()) {
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="isLoading()"
+                (click)="submitCreate()"
+              >
+                Save
+              </button>
+            }
+
+            @if (isEditMode()) {
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="goBackward()"
+                [disabled]="!canGoBackward() || isLoading()"
+              >
+                &#8592; Backward
+              </button>
+              <button
+                mat-raised-button
+                color="primary"
+                type="button"
+                (click)="goForward()"
+                [disabled]="!canGoForward() || isLoading()"
+              >
+                Forward &#8594;
+              </button>
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="closeTask()"
+                [disabled]="!task()?.canBeClosed || isLoading() || task()?.isClosed"
+              >
+                Close task
+              </button>
+            }
+          </div>
+        </form>
+      }
+
+      @if (errorMessage()) {
+        <p class="task-details__error">{{ errorMessage() }}</p>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>

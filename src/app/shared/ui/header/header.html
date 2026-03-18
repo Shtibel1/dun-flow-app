@@ -1,0 +1,11 @@
+<div class="wrapper">
+  <h1>DunFlow</h1>
+  @if (currentUser()) {
+    <div class="user-controls">
+      <div class="avatar">{{ currentUser()!.fullName[0] }}</div>
+      <button mat-icon-button type="button" (click)="logout()" aria-label="Logout">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+  }
+</div>

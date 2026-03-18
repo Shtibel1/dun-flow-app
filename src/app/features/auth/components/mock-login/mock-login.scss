@@ -1,0 +1,21 @@
+.mock-login {
+  min-height: min(70dvh, 40rem);
+  display: grid;
+  place-items: center;
+}
+
+.mock-login__card {
+  width: min(100%, 28rem);
+  border-radius: 1.5rem;
+}
+
+.mock-login__form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mock-login__error {
+  margin: 0;
+  color: var(--mat-sys-error);
+}

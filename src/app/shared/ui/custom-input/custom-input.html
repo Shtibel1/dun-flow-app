@@ -1,0 +1,7 @@
+<mat-form-field appearance="fill">
+  <mat-label> {{ label }} </mat-label>
+  <input matInput [type]="type" [formControl]="control" />
+  @if (control.hasError('required')) {
+  <mat-error> This field is required </mat-error>
+  }
+</mat-form-field>

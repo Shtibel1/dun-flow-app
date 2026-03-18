@@ -1,0 +1,7 @@
+<mat-form-field appearance="fill" [hideRequiredMarker]="true" width="100%">
+  <mat-label *ngIf="label">{{ label }}</mat-label>
+  <textarea rows="10" [formControl]="control" matInput></textarea>
+  @if (control.hasError('required')) {
+  <mat-error> This field is required </mat-error>
+  }
+</mat-form-field>

@@ -1,0 +1,29 @@
+<div class="task-list">
+  @if (isLoading() && !dataSource()) {
+    <div class="task-list__spinner">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <p class="task-list__error">{{ errorMessage() }}</p>
+  }
+
+  @if (dataSource(); as dataSource) {
+    <app-table
+      [dataSource]="dataSource"
+      [columns]="columnConfig"
+      (rowClick)="onRow($event)"
+    ></app-table>
+  }
+
+  <button
+    mat-fab
+    color="primary"
+    class="task-list__fab"
+    aria-label="Create new task"
+    (click)="onCreate()"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
+</div>

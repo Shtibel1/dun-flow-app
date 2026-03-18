@@ -1,0 +1,20 @@
+<div class="dynamic-form" [formGroup]="formGroup">
+  @for (field of fields; track field.key) {
+    @if (hasControl(field.key)) {
+      @if (field.controlType === 'textarea') {
+        <div class="dynamic-form__full-width">
+          <app-text-area
+            [label]="field.label"
+            [control]="getCustomFieldControl(field.key)"
+          ></app-text-area>
+        </div>
+      } @else {
+        <app-custom-input
+          [label]="field.label"
+          [type]="getInputType(field.controlType)"
+          [control]="getCustomFieldControl(field.key)"
+        ></app-custom-input>
+      }
+    }
+  }
+</div>

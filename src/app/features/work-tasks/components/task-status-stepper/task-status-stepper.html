@@ -1,0 +1,14 @@
+@if (steps.length > 0) {
+  <mat-stepper
+    class="task-status-stepper"
+    aria-label="Task status progress"
+    [selectedIndex]="selectedIndex"
+  >
+    @for (step of steps; track step.value) {
+      <mat-step
+        [label]="step.label"
+        [completed]="isCompleted(step.value)"
+      ></mat-step>
+    }
+  </mat-stepper>
+}
