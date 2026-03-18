@@ -26,7 +26,6 @@ export class AuthService {
   }
 
   login(user: User | null): void {
-    console.log('AuthService.login called with user:', user);
     if (!user) return;
     this.currentUser$.next(user);
     localStorage.setItem(this.storageKey, JSON.stringify(user));

@@ -5,7 +5,7 @@ import {
   DestroyRef,
   inject,
   OnInit,
-  signal
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -60,24 +60,26 @@ interface TaskFormModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TaskDetails implements OnInit {
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly tasksService = inject(TasksService);
-  private readonly taskMetadataService = inject(TaskMetadataService);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly authService = inject(AuthService);
-  private readonly snackBar = inject(MatSnackBar);
+  private destroyRef = inject(DestroyRef);
+  private tasksService = inject(TasksService);
+  private taskMetadataService = inject(TaskMetadataService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
 
-  readonly task = signal<WorkTaskDetails | null>(null);
-  readonly isEditMode = signal(false);
-  readonly dynamicFields = signal<FormField[]>([]);
-  readonly isLoading = signal(false);
-  readonly errorMessage = signal('');
-  readonly taskType = signal<TaskType | null>(null);
-  readonly taskTypeOptions = signal<Option<number>[]>([]);
-  readonly taskStatusOptions = signal<Option<number>[]>([]);
+  task = signal<WorkTaskDetails | null>(null);
+  isEditMode = signal(false);
+  dynamicFields = signal<FormField[]>([]);
+  isLoading = signal(false);
+  errorMessage = signal('');
+  taskType = signal<TaskType | null>(null);
+  taskTypeOptions = signal<Option<number>[]>([]);
+  taskStatusOptions = signal<Option<number>[]>([]);
 
-  readonly steps = computed(() => {
+  isClosed = computed(() => this.task()?.isClosed ?? false);
+
+  steps = computed(() => {
     const type = this.taskType();
     return (
       type?.statuses.map((status) => ({
@@ -87,17 +89,13 @@ export class TaskDetails implements OnInit {
     );
   });
 
-  readonly currentStepIndex = signal<number>(-1);
+  currentStepIndex = signal<number>(-1);
 
-  readonly canGoForward = computed(
-    () =>
-      this.currentStepIndex() >= 0 &&
-      this.currentStepIndex() < this.steps().length - 1
+  canGoForward = computed(
+    () => this.currentStepIndex() >= 0 && this.currentStepIndex() < this.steps().length - 1,
   );
 
-  readonly canGoBackward = computed(
-    () => this.currentStepIndex() > 0
-  );
+  canGoBackward = computed(() => this.currentStepIndex() > 0);
 
   form!: FormGroup<TaskFormModel>;
 
@@ -107,47 +105,59 @@ export class TaskDetails implements OnInit {
 
     this.isLoading.set(true);
 
-    this.initTaskTypeOptions().pipe(
-      switchMap(() => {
-        if (taskId) {
-          return this.initTask(taskId).pipe(
-            switchMap((task) => this.initTaskType(task.workTaskTypeId))
-          );
-        }
-        return of(null);
-      }),
-      finalize(() => this.isLoading.set(false)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: () => {
-        this.initForm();
-        this.initStatusListener();
-        console.log(this.currentStepIndex())
-      },
-      error: (error: Error) => {
-        this.errorMessage.set(error.message);
-      }
-    });
+    this.initTaskTypeOptions()
+      .pipe(
+        switchMap(() => {
+          if (taskId) {
+            return this.initTask(taskId).pipe(
+              switchMap((task) => this.initTaskType(task.workTaskTypeId)),
+            );
+          }
+          return of(null);
+        }),
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: () => {
+          this.initForm();
+          this.initStatusListener();
+        },
+        error: (error: Error) => {
+          this.errorMessage.set(error.message);
+        },
+      });
   }
 
   private initForm(): void {
     const title = this.task()?.title ?? '';
     const type = this.task()?.workTaskTypeId ?? null;
     const currentStatusValue = this.task()?.currentStatus ?? null;
-    const currentStepIndex = currentStatusValue != null
-      ? this.steps().findIndex((s) => s.value === currentStatusValue)
-      : null;
+    const currentStepIndex =
+      currentStatusValue != null
+        ? this.steps().findIndex((s) => s.value === currentStatusValue)
+        : null;
     const nextAssignedUserId = this.task()?.assignedUserId ?? null;
 
     this.form = new FormGroup({
       title: new FormControl<string | null>(title, [Validators.required]),
-      type: new FormControl<number | null>({ disabled: this.isEditMode(), value: type }, [Validators.required]),
-      currentStatus: new FormControl<number | null>(currentStepIndex != null && currentStepIndex >= 0 ? currentStepIndex : null),
+      type: new FormControl<number | null>({ disabled: this.isEditMode(), value: type }, [
+        Validators.required,
+      ]),
+      currentStatus: new FormControl<number | null>(
+        currentStepIndex != null && currentStepIndex >= 0 ? currentStepIndex : null,
+      ),
       nextAssignedUserId: new FormControl<number | null>(nextAssignedUserId, [Validators.required]),
       customFields: new FormGroup<Record<string, FormControl<any>>>({}),
     });
 
-    this.currentStepIndex.set(currentStepIndex != null && currentStepIndex >= 0 ? currentStepIndex : -1);
+    this.currentStepIndex.set(
+      currentStepIndex != null && currentStepIndex >= 0 ? currentStepIndex : -1,
+    );
+
+    if (this.isClosed()) {
+      this.form.disable();
+    }
   }
 
   private initTaskType(typeId: number): Observable<TaskType | null> {
@@ -160,11 +170,11 @@ export class TaskDetails implements OnInit {
             type.statuses.map((status) => ({
               value: status.statusValue,
               label: status.displayName,
-            }))
+            })),
           );
         },
         error: () => this.taskType.set(null),
-      })
+      }),
     );
   }
 
@@ -176,11 +186,11 @@ export class TaskDetails implements OnInit {
             types.map((type) => ({
               value: type.typeValue,
               label: type.taskType,
-            }))
+            })),
           );
         },
         error: () => this.taskTypeOptions.set([]),
-      })
+      }),
     );
   }
 
@@ -188,7 +198,7 @@ export class TaskDetails implements OnInit {
     this.form.controls.currentStatus.valueChanges
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        filter((val): val is number => val != null)
+        filter((val): val is number => val != null),
       )
       .subscribe((val) => {
         this.currentStepIndex.set(val);
@@ -212,10 +222,11 @@ export class TaskDetails implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.tasksService.closeTask(task.id)
+    this.tasksService
+      .closeTask(task.id)
       .pipe(
         finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: () => {
@@ -245,7 +256,7 @@ export class TaskDetails implements OnInit {
           this.task.set(null);
           this.errorMessage.set(error.message);
         },
-      })
+      }),
     );
   }
 
@@ -259,7 +270,8 @@ export class TaskDetails implements OnInit {
       this.dynamicFields.set([]);
       return;
     }
-    this.taskMetadataService.getFormSchema(task.workTaskTypeId, nextStatusValue)
+    this.taskMetadataService
+      .getFormSchema(task.workTaskTypeId, nextStatusValue)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (fields) => this.dynamicFields.set(fields),
@@ -289,10 +301,11 @@ export class TaskDetails implements OnInit {
     };
 
     this.isLoading.set(true);
-    this.tasksService.createTask(request)
+    this.tasksService
+      .createTask(request)
       .pipe(
         finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: () => {
@@ -324,26 +337,28 @@ export class TaskDetails implements OnInit {
     };
 
     this.isLoading.set(true);
-    this.tasksService.changeStatus(task.id, request)
+    this.tasksService
+      .changeStatus(task.id, request)
       .pipe(
         finalize(() => this.isLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: () => {
           this.showSuccess('Task updated successfully.');
 
           const currentUserId = this.authService.currentUser$.value?.id;
-          const wasTransferredToAnotherUser = currentUserId != null && nextAssignedUserId !== currentUserId;
+          const wasTransferredToAnotherUser =
+            currentUserId != null && nextAssignedUserId !== currentUserId;
 
           if (wasTransferredToAnotherUser) {
             this.router.navigate(['/']);
             return;
           }
 
-          this.initTask(task.id).pipe(
-            switchMap(updatedTask => this.initTaskType(updatedTask.workTaskTypeId))
-          ).subscribe();
+          this.initTask(task.id)
+            .pipe(switchMap((updatedTask) => this.initTaskType(updatedTask.workTaskTypeId)))
+            .subscribe();
         },
         error: (error: Error) => this.errorMessage.set(error.message),
       });
@@ -353,15 +368,12 @@ export class TaskDetails implements OnInit {
     const nextIndex = this.currentStepIndex() + 1;
     if (nextIndex >= this.steps().length) return;
 
-    console.log('Going forward to step index:', nextIndex);
-
     this.submitUpdate(nextIndex);
   }
 
   goBackward(): void {
     const prevIndex = this.currentStepIndex() - 1;
     if (prevIndex < 0) return;
-    console.log('Going backward to step index:', prevIndex);
     this.form.controls.currentStatus.setValue(prevIndex);
   }
 

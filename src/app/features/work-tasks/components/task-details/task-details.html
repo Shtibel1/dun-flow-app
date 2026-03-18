@@ -31,6 +31,9 @@
           </div>
 
           @if (isEditMode() && task()) {
+            @if (isClosed()) {
+              <p class="task-details__closed-notice">This task is closed and cannot be modified.</p>
+            }
             <app-task-status-stepper
               class="task-details__status-stepper"
               [steps]="steps()"
@@ -74,7 +77,7 @@
                 mat-stroked-button
                 type="button"
                 (click)="goBackward()"
-                [disabled]="!canGoBackward() || isLoading()"
+                [disabled]="!canGoBackward() || isLoading() || isClosed()"
               >
                 &#8592; Backward
               </button>
@@ -83,7 +86,7 @@
                 color="primary"
                 type="button"
                 (click)="goForward()"
-                [disabled]="!canGoForward() || isLoading()"
+                [disabled]="!canGoForward() || isLoading() || isClosed()"
               >
                 Forward &#8594;
               </button>
